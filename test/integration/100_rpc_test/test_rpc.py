@@ -238,8 +238,8 @@ class HasRPCServer(DBTIntegrationTest):
             self.assertEqual(timing['name'], expected_name)
             self.assertIn('started_at', timing)
             self.assertIn('completed_at', timing)
-            datetime.strptime(timing['started_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
-            datetime.strptime(timing['completed_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            datetime.strptime(timing['started_at'], '%Y-%m-%dT%H:%M:%S.%f')
+            datetime.strptime(timing['completed_at'], '%Y-%m-%dT%H:%M:%S.%f')
 
     def assertIsResult(self, data, id_=1):
         self.assertEqual(data['id'], id_)
@@ -392,7 +392,6 @@ class HasRPCServer(DBTIntegrationTest):
         return stored
 
 
-@mark.flaky(rerun_filter=addr_in_use)
 class TestRPCServerCompileRun(HasRPCServer):
     @use_profile('postgres')
     def test_compile_sql_postgres(self):
@@ -601,7 +600,6 @@ class TestRPCServerCompileRun(HasRPCServer):
             table={'column_names': ['id'], 'rows': [[1.0]]}
         )
 
-    @mark.flaky(rerun_filter=None)
     @use_profile('postgres')
     def test_ps_kill_postgres(self):
         task_tags = {
@@ -691,7 +689,6 @@ class TestRPCServerCompileRun(HasRPCServer):
         self.assertGreater(rowdict[1]['elapsed'], 0)
         self.assertIsNone(rowdict[1]['tags'])
 
-    @mark.flaky(rerun_filter=lambda *a, **kw: True)
     @use_profile('postgres')
     def test_ps_kill_longwait_postgres(self):
         request_token, request_id = self.get_sleep_query()
@@ -781,7 +778,6 @@ class TestRPCServerCompileRun(HasRPCServer):
         return
 
 
-@mark.flaky(rerun_filter=addr_in_use)
 class TestRPCServerProjects(HasRPCServer):
     def assertHasResults(self, result, expected, *, missing=None, num_expected=None):
         dct = self.assertIsResult(result)
@@ -984,10 +980,8 @@ class TestRPCServerProjects(HasRPCServer):
         self.async_query('cli_args', cli='deps').json()
 
 
-@mark.flaky(rerun_filter=addr_in_use)
 class TestRPCTaskManagement(HasRPCServer):
 
-    @mark.flaky(rerun_filter=lambda *a, **kw: True)
     @use_profile('postgres')
     def test_sighup_postgres(self):
         status = self.assertIsResult(self.query('status').json())
@@ -1095,7 +1089,6 @@ class CompletingServerProcess(ServerProcess):
         return result['result']['state'] in ('error', 'ready')
 
 
-@mark.flaky(rerun_filter=addr_in_use)
 class TestRPCServerDeps(HasRPCServer):
     ServerProcess = CompletingServerProcess
     should_seed = False

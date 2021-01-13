@@ -6,7 +6,7 @@ from typing import (
     Iterable, Dict, Any, Union, List, Optional, Generic, TypeVar, Type
 )
 
-from dbt.dataclass_schema import ValidationError, JsonSchemaMixin
+from dbt.dataclass_schema import ValidationError, dbtClassMixin
 
 from dbt.adapters.factory import get_adapter, get_adapter_package_names
 from dbt.clients.jinja import get_rendered, add_rendered_test_kwargs
@@ -214,7 +214,9 @@ class SchemaParser(SimpleParser[SchemaTestBlock, ParsedSchemaTestNode]):
         )
 
     def parse_from_dict(self, dct, validate=True) -> ParsedSchemaTestNode:
-        return ParsedSchemaTestNode.from_dict(dct, validate=validate)
+        if validate:
+            ParsedSchemaTestNode.validate(dct)
+        return ParsedSchemaTestNode.from_dict(dct)
 
     def _check_format_version(
         self, yaml: YamlBlock
@@ -760,14 +762,15 @@ class YamlDocsReader(YamlReader):
         raise NotImplementedError('parse is abstract')
 
 
-T = TypeVar('T', bound=JsonSchemaMixin)
+T = TypeVar('T', bound=dbtClassMixin)
 
 
 class SourceParser(YamlDocsReader):
     def _target_from_dict(self, cls: Type[T], data: Dict[str, Any]) -> T:
         path = self.yaml.path.original_file_path
         try:
-            return cls.from_dict(data, validate=True)
+            cls.validate(data)
+            return cls.from_dict(data)
         except (ValidationError, JSONValidationException) as exc:
             msg = error_context(path, self.key, data, exc)
             raise CompilationException(msg) from exc
@@ -869,7 +872,8 @@ class NonSourceParser(YamlDocsReader, Generic[NonSourceTarget, Parsed]):
         # parser handles
         key_dicts = self.get_key_dicts()
         for data in key_dicts:
-            # add extra data to each dict
+            # add extra data to each dict. This updates the dicts
+            # in the parser yaml
             data.update({
                 'original_file_path': path,
                 'yaml_key': self.key,
@@ -993,7 +997,7 @@ class ExposureParser(YamlReader):
         for data in self.get_key_dicts():
             try:
                 UnparsedExposure.validate(data)
-                unparsed = UnparsedExposure.from_dict(data, validate=True)
+                unparsed = UnparsedExposure.from_dict(data)
             except (ValidationError, JSONValidationException) as exc:
                 msg = error_context(self.yaml.path, self.key, data, exc)
                 raise CompilationException(msg) from exc
