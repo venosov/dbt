@@ -1,3 +1,11 @@
+## dbt 0.19.1 (Release TBD)
+
+### Under the hood
+- Bump werkzeug upper bound dependency to <v2.0 ([#3011](https://github.com/fishtown-analytics/dbt/pull/3011))
+
+Contributors:
+- [@Bl3f](https://github.com/Bl3f) ([#3011](https://github.com/fishtown-analytics/dbt/pull/3011))
+
 ## dbt 0.19.0 (Release TBD)
 
 ## dbt 0.19.0rc2 (January 14, 2021)
